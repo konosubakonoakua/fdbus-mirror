@@ -22,7 +22,6 @@
 #include "CFdbBaseContext.h"
 #include "CMethodJob.h"
 #include "CEntityContainer.h"
-#include <mutex>
 
 namespace ipc {
 namespace fdbus {
@@ -53,6 +52,8 @@ public:
 
     static CFdbContext *getInstance();
     bool destroy();
+
+    bool start(uint32_t flag = FDB_WORKER_DEFAULT);
 
     CIntraNameProxy *getNameProxy();
     static void enableNameProxy(bool enable)
@@ -96,9 +97,6 @@ private:
     static bool mEnableLogger;
     static bool mEnableLogCache;
     static int32_t mLogCacheSize;
-
-    static CFdbContext *mInstance;
-    static std::mutex mInstanceMutex;
 
     CFdbContext();
     friend class CRegisterContextJob;

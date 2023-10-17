@@ -763,7 +763,7 @@ bool CDataPool::createData(tDataPoolCallbackFn modify_listener)
 
 bool CDataPool::destroyData()
 {
-    return destroyData();
+    return true;
 }
 
 void CDataPool::saveSubscribeHandleForClient(CDpClient *client,

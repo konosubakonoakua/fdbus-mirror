@@ -21,6 +21,7 @@
 #ifdef CONFIG_SSL
 #include <openssl/ssl.h>
 #endif
+#include <mutex>
 
 namespace ipc {
 namespace fdbus {
@@ -29,8 +30,6 @@ bool CFdbContext::mEnableNameProxy = true;
 bool CFdbContext::mEnableLogger = true;
 bool CFdbContext::mEnableLogCache = true;
 int32_t CFdbContext::mLogCacheSize = 0;
-CFdbContext *CFdbContext::mInstance = 0;
-std::mutex CFdbContext::mInstanceMutex;
 
 CFdbContext::CFdbContext()
     : CFdbBaseContext("FDBusDefaultContext")
@@ -42,10 +41,10 @@ CFdbContext::CFdbContext()
     OpenSSL_add_all_algorithms();
     SSL_load_error_strings();
 #endif
-    mInstance = this;
-    mInstanceMutex.unlock();
-    // now mInstance is valid and CFdbContext::getInstance() works.
+}
 
+bool CFdbContext::start(uint32_t flag)
+{
     if (mEnableNameProxy)
     {
         auto name_proxy = new CIntraNameProxy();
@@ -65,22 +64,23 @@ CFdbContext::CFdbContext()
         logger->doConnect(svc_url.c_str());
         mLogger = logger;
     }
+
+    return CFdbBaseContext::start(flag);
 }
 
 CFdbContext *CFdbContext::getInstance()
 {
-    if (!mInstance)
+    static CFdbContext *instance_ptr = 0;
+    static std::mutex instance_lock;
+    if (!instance_ptr)
     {
-        mInstanceMutex.lock();
-        // In constructor:
-        // mInstance will be assigned;
-        // mInstanceMutex will be unlocked.
-        if (!mInstance)
+        std::lock_guard<std::mutex> _l(instance_lock);
+        if (!instance_ptr)
         {
-            new CFdbContext();
+            instance_ptr = new CFdbContext();
         }
     }
-    return mInstance;
+    return instance_ptr;
 }
 
 const char *CFdbContext::getFdbLibVersion()
