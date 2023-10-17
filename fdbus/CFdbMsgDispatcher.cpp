@@ -154,6 +154,10 @@ bool CBaseEventDispatcher::processMessage(CBaseJob::Ptr &msg_ref,
                     handles_to_invoke.push_back(&(it_callback->second));
                 }
             }
+			if (match_topics[i][0] == '\0')
+			{
+				break;
+			}
         }
     }
     return true;
